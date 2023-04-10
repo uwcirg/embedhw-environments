@@ -1,0 +1,102 @@
+---
+version: "3.7"
+services:
+  confidentialbackend:
+    image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
+    env_file:
+      confidentialbackend.env
+    environment:
+      REQUEST_CACHE_URL: redis://redis:6379/1
+      SESSION_REDIS: redis://redis:6379/0
+
+      # client ID regisered with SoF host (Keycloak)
+      SOF_CLIENT_ID: confidentialbackend_openid_client
+      PREFERRED_URL_SCHEME: https
+      # ultimate destination after SoF launch and backend auth
+      LAUNCH_DEST: 'https://summary.${BASE_DOMAIN:-localtest.me}/launch.html'
+
+      # do not pass launch/patient as Epic will infer standalone launch
+      SOF_CLIENT_SCOPES: "patient/*.read launch openid profile roles"
+      SOF_ACCESS_TOKEN_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/token'
+      SOF_AUTHORIZE_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/auth'
+      LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN:-localtest.me}`)"
+      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true"
+      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+    networks:
+      - ingress
+      - internal
+    depends_on:
+      - redis
+
+
+  db:
+    image: postgres:${POSTGRES_IMAGE_TAG:-12}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+      # mount db creation script in place for bootstrap
+      - "./config/db:/docker-entrypoint-initdb.d"
+    networks:
+      - internal
+
+
+  logs:
+    image: postgrest/postgrest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN:-localtest.me}`)"
+      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true"
+      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/app_db
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: web_anon
+    env_file:
+      - logs.env
+    depends_on:
+      - db
+    networks:
+      - ingress
+      - internal
+
+
+  redis:
+    image: redis
+    networks:
+      - internal
+
+
+  summary:
+    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
+    environment:
+      REACT_APP_CLIENT_ID: 'summary_openid_client'
+      REACT_APP_PROJECT_ID: 'EmbeddedSummary'
+      REACT_APP_QUESTIONNAIRES: minicog,ecog12,cp-ecog,adl_iadl,gad7,gds,c-idas,behav5,slums
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`summary.${BASE_DOMAIN:-localtest.me}`)"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+    networks:
+      - ingress
+
+volumes:
+  db-data: {}
+
+
+networks:
+  # internal network for backing services
+  internal:
+
+  # ingress network
+  ingress:
+    external: true
+    name: external_web
