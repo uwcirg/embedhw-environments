@@ -77,6 +77,7 @@ services:
     image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
     environment:
       REACT_APP_CLIENT_ID: 'summary_openid_client'
+      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
       REACT_APP_PROJECT_ID: 'EmbeddedSummary'
       REACT_APP_QUESTIONNAIRES: minicog,ecog12,cp-ecog,adl_iadl,gad7,gds,c-idas,behav5,slums
     labels:
