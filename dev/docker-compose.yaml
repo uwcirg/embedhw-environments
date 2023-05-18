@@ -9,14 +9,12 @@ services:
       REQUEST_CACHE_URL: redis://redis:6379/1
       SESSION_REDIS: redis://redis:6379/0
 
-      # client ID regisered with SoF host (Keycloak)
-      SOF_CLIENT_ID: confidentialbackend_openid_client
       PREFERRED_URL_SCHEME: https
       # ultimate destination after SoF launch and backend auth
       LAUNCH_DEST: 'https://summary.${BASE_DOMAIN:-localtest.me}/launch.html'
 
       # do not pass launch/patient as Epic will infer standalone launch
-      SOF_CLIENT_SCOPES: "patient/*.read launch openid profile roles"
+      SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
       SOF_ACCESS_TOKEN_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/token'
       SOF_AUTHORIZE_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/auth'
       LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
