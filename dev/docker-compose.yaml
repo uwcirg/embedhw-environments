@@ -13,6 +13,7 @@ services:
       SESSION_COOKIE_SECURE: "true"
       # share cookies between domains
       SESSION_COOKIE_SAMESITE: None
+      SESSION_COOKIE_DOMAIN: ${BASE_DOMAIN}
 
       # ultimate destination after SoF launch and backend auth
       LAUNCH_DEST: 'https://summary.${BASE_DOMAIN:-localtest.me}/launch.html'
