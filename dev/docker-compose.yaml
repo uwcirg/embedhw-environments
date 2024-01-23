@@ -11,8 +11,8 @@ services:
 
       PREFERRED_URL_SCHEME: https
       SESSION_COOKIE_SECURE: "true"
-      # share cookies between domains
-      SESSION_COOKIE_SAMESITE: None
+      # to share cookies between subdomains, set cookie domain to base domain of deploy
+      SESSION_COOKIE_DOMAIN: ${BASE_DOMAIN}
 
       # ultimate destination after SoF launch and backend auth
       LAUNCH_DEST: 'https://summary.${BASE_DOMAIN:-localtest.me}/launch.html'
