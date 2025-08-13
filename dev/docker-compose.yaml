@@ -34,7 +34,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - "log-files:/var/log/confidentialbackend"
+      - log-files:/var/log/confidentialbackend
 
 
   db:
@@ -43,9 +43,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - "db-data:/var/lib/postgresql/data"
+      - db-data:/var/lib/postgresql/data
       # mount db creation script in place for bootstrap
-      - "./config/db:/docker-entrypoint-initdb.d"
+      - ./config/db:/docker-entrypoint-initdb.d
     networks:
       - internal
 
