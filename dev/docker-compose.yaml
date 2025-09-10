@@ -50,6 +50,47 @@ services:
       - internal
 
 
+  fhir:
+    # SoF launch platform is primary FHIR endpoint, this represents an
+    # internal, external or secondary FHIR endpoint
+    image: hapiproject/hapi:${FHIR_IMAGE_TAG:-v6.8.3}
+    environment:
+      spring.datasource.url: jdbc:postgresql://db:5432/hapifhir
+      spring.datasource.username: postgres
+      spring.datasource.password: postgres
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgres94Dialect
+
+      hapi.fhir.bulk_export_enabled: "true"
+      hapi.fhir.bulk_import_enabled: "true"
+      # TODO remove when cascading delete generally available in FHIR REST API
+      hapi.fhir.enforce_referential_integrity_on_delete: "false"
+      # allow direct assignment of resource IDs in any format
+      hapi.fhir.client_id_strategy: ANY
+
+      hapi.fhir.server_address: https://fhir.${BASE_DOMAIN}/fhir/
+
+      SPRING_CONFIG_LOCATION: file:///opt/application.yaml
+    volumes:
+      - ./config/fhir/application.yaml:/opt/application.yaml:ro
+    depends_on:
+      - db
+    networks:
+      internal:
+        aliases:
+          - fhir-internal
+      ingress:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
+      # Hapi does not EXPOSE the ports it listens on, requiring explicit traefik configuration
+      - traefik.http.services.fhir-${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=8080
+
+
   logs:
     image: postgrest/postgrest
     labels:
