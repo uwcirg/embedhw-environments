@@ -15,7 +15,7 @@ services:
       SESSION_COOKIE_DOMAIN: ${BASE_DOMAIN}
 
       # ultimate destination after SoF launch and backend auth
-      LAUNCH_DEST: 'https://summary.${BASE_DOMAIN:-localtest.me}/launch.html'
+      LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}/launch.html'
 
       # do not pass launch/patient as Epic will infer standalone launch
       SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
@@ -24,7 +24,8 @@ services:
       LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN:-localtest.me}`)"
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`))
+
       - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
       - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true"
       - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
@@ -86,7 +87,8 @@ services:
       REACT_APP_QUESTIONNAIRES: minicog,ecog12,cp-ecog,adl_iadl,gad7,gds,c-idas,behav5,slums
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`summary.${BASE_DOMAIN:-localtest.me}`)"
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`)
+
       - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
       - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
       - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
