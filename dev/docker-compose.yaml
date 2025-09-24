@@ -11,9 +11,6 @@ services:
 
       PREFERRED_URL_SCHEME: https
       SESSION_COOKIE_SECURE: "true"
-      # to share cookies between subdomains, set cookie domain to base domain of deploy
-      SESSION_COOKIE_DOMAIN: ${BASE_DOMAIN}
-
       # ultimate destination after SoF launch and backend auth
       LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}/launch.html'
 
