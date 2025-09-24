@@ -19,8 +19,7 @@ services:
 
       # do not pass launch/patient as Epic will infer standalone launch
       SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
-      SOF_ACCESS_TOKEN_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/token'
-      SOF_AUTHORIZE_URL: 'https://keycloak.${BASE_DOMAIN:-localtest.me}/auth/realms/fEMR/protocol/openid-connect/auth'
+
       LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
     labels:
       - "traefik.enable=true"
