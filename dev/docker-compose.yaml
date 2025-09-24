@@ -11,6 +11,9 @@ services:
 
       PREFERRED_URL_SCHEME: https
       SESSION_COOKIE_SECURE: "true"
+      # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
+      SESSION_COOKIE_PARTITIONED: "true"
+      SESSION_COOKIE_SAMESITE: "None"
       # ultimate destination after SoF launch and backend auth
       LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}/launch.html'
 
