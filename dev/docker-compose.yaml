@@ -78,6 +78,8 @@ services:
 
   summary:
     image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
+    env_file:
+      - summary.env
     environment:
       REACT_APP_CLIENT_ID: 'summary_openid_client'
       REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
