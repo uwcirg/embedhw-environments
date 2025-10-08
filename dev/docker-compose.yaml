@@ -89,8 +89,6 @@ services:
 volumes:
   db-data: {}
   log-files: {}
-
-
 networks:
   # internal network for backing services
   internal:
