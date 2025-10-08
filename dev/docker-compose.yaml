@@ -12,21 +12,21 @@ services:
       PREFERRED_URL_SCHEME: https
       SESSION_COOKIE_SECURE: "true"
       # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
-      SESSION_COOKIE_SAMESITE: "None"
+      SESSION_COOKIE_SAMESITE: None
       # ultimate destination after SoF launch and backend auth
-      LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN}/launch.html'
+      LAUNCH_DEST: https://confidentialbackend.${BASE_DOMAIN}/launch.html
 
       # do not pass launch/patient as Epic will infer standalone launch
-      SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
+      SOF_CLIENT_SCOPES: user/*.read launch openid fhirUser
 
-      LOGSERVER_URL: "https://logs.${BASE_DOMAIN}"
+      LOGSERVER_URL: https://logs.${BASE_DOMAIN}
     labels:
-      - "traefik.enable=true"
+      - traefik.enable=true
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
 
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     networks:
       - ingress
       - internal
@@ -39,27 +39,27 @@ services:
     env_file:
       - summary.env
     environment:
-      REACT_APP_CLIENT_ID: 'summary_openid_client'
-      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN}'
-      REACT_APP_PROJECT_ID: 'EmbeddedSummary'
+      REACT_APP_CLIENT_ID: summary_openid_client
+      REACT_APP_CONF_API_URL: https://confidentialbackend.${BASE_DOMAIN}
+      REACT_APP_PROJECT_ID: EmbeddedSummary
     labels:
-      - "traefik.enable=true"
+      - traefik.enable=true
       - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
 
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     networks:
       - ingress
 
   logs:
     image: postgrest/postgrest
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+      - traefik.enable=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     environment:
       PGRST_DB_URI: postgres://postgres:postgres@db:5432/app_db
       PGRST_DB_SCHEMA: api
