@@ -14,12 +14,12 @@ services:
       # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
       SESSION_COOKIE_SAMESITE: "None"
       # ultimate destination after SoF launch and backend auth
-      LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}/launch.html'
+      LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN}/launch.html'
 
       # do not pass launch/patient as Epic will infer standalone launch
       SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
 
-      LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
+      LOGSERVER_URL: "https://logs.${BASE_DOMAIN}"
     labels:
       - "traefik.enable=true"
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
@@ -40,7 +40,7 @@ services:
       - summary.env
     environment:
       REACT_APP_CLIENT_ID: 'summary_openid_client'
-      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
+      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN}'
       REACT_APP_PROJECT_ID: 'EmbeddedSummary'
     labels:
       - "traefik.enable=true"
@@ -56,7 +56,7 @@ services:
     image: postgrest/postgrest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN:-localtest.me}`)"
+      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)"
       - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
       - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true"
       - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
