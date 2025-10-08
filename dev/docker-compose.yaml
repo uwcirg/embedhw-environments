@@ -34,20 +34,23 @@ services:
       - redis
     volumes:
       - log-files:/var/log/confidentialbackend
-
-
-  db:
-    image: postgres:${POSTGRES_IMAGE_TAG:-12}
+  summary:
+    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
+    env_file:
+      - summary.env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      # mount db creation script in place for bootstrap
-      - ./config/db:/docker-entrypoint-initdb.d
-    networks:
-      - internal
+      REACT_APP_CLIENT_ID: 'summary_openid_client'
+      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
+      REACT_APP_PROJECT_ID: 'EmbeddedSummary'
+    labels:
+      - "traefik.enable=true"
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
 
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
+      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+    networks:
+      - ingress
 
   logs:
     image: postgrest/postgrest
@@ -68,32 +71,21 @@ services:
     networks:
       - ingress
       - internal
-
-
+  db:
+    image: postgres:${POSTGRES_IMAGE_TAG:-12}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # mount db creation script in place for bootstrap
+      - ./config/db:/docker-entrypoint-initdb.d
+    networks:
+      - internal
   redis:
     image: redis
     networks:
       - internal
-
-
-  summary:
-    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
-    env_file:
-      - summary.env
-    environment:
-      REACT_APP_CLIENT_ID: 'summary_openid_client'
-      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
-      REACT_APP_PROJECT_ID: 'EmbeddedSummary'
-    labels:
-      - "traefik.enable=true"
-      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
-
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
-    networks:
-      - ingress
-
 volumes:
   db-data: {}
   log-files: {}
