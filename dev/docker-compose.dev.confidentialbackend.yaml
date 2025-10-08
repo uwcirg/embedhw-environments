@@ -1,5 +1,4 @@
-# docker-compose development override for fhirwall service
-version: "3.7"
+# docker-compose development override for confidentialbackend
 services:
   confidentialbackend:
     command: sh -c "flask --debug run --host 0.0.0.0 --port ${PORT:-8000}"

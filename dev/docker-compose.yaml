@@ -1,5 +1,4 @@
 ---
-version: "3.7"
 services:
   confidentialbackend:
     image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
