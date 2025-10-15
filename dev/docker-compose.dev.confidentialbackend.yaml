@@ -1,5 +1,4 @@
-# docker-compose development override for fhirwall service
-version: "3.7"
+# docker-compose development override for confidentialbackend
 services:
   confidentialbackend:
     command: sh -c "flask --debug run --host 0.0.0.0 --port ${PORT:-8000}"
@@ -8,7 +7,7 @@ services:
       FLASK_DEBUG: "true"
     volumes:
     # set in .env
-      - "${CONFIDENTIALBACKEND_CHECKOUT_DIR}/:/opt/app"
+      - ${CONFIDENTIALBACKEND_CHECKOUT_DIR}/:/opt/app
     labels:
       # rewrite headers so flask debugger thinks it's running on localhost
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.middlewares=set-dev-host

@@ -1,5 +1,4 @@
 ---
-version: "3.7"
 services:
   confidentialbackend:
     image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
@@ -12,21 +11,21 @@ services:
       PREFERRED_URL_SCHEME: https
       SESSION_COOKIE_SECURE: "true"
       # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
-      SESSION_COOKIE_SAMESITE: "None"
+      SESSION_COOKIE_SAMESITE: None
       # ultimate destination after SoF launch and backend auth
-      LAUNCH_DEST: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}/launch.html'
+      LAUNCH_DEST: https://confidentialbackend.${BASE_DOMAIN}/launch.html
 
       # do not pass launch/patient as Epic will infer standalone launch
-      SOF_CLIENT_SCOPES: "user/*.read launch openid fhirUser"
+      SOF_CLIENT_SCOPES: user/*.read launch openid fhirUser
 
-      LOGSERVER_URL: "https://logs.${BASE_DOMAIN:-localtest.me}"
+      LOGSERVER_URL: https://logs.${BASE_DOMAIN}
     labels:
-      - "traefik.enable=true"
+      - traefik.enable=true
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
 
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     networks:
       - ingress
       - internal
@@ -34,29 +33,32 @@ services:
       - redis
     volumes:
       - log-files:/var/log/confidentialbackend
-
-
-  db:
-    image: postgres:${POSTGRES_IMAGE_TAG:-12}
+  summary:
+    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
+    env_file:
+      - summary.env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      # mount db creation script in place for bootstrap
-      - ./config/db:/docker-entrypoint-initdb.d
-    networks:
-      - internal
+      REACT_APP_CLIENT_ID: summary_openid_client
+      REACT_APP_CONF_API_URL: https://confidentialbackend.${BASE_DOMAIN}
+      REACT_APP_PROJECT_ID: EmbeddedSummary
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
 
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+    networks:
+      - ingress
 
   logs:
     image: postgrest/postgrest
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN:-localtest.me}`)"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
+      - traefik.enable=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     environment:
       PGRST_DB_URI: postgres://postgres:postgres@db:5432/app_db
       PGRST_DB_SCHEMA: api
@@ -68,37 +70,24 @@ services:
     networks:
       - ingress
       - internal
-
-
+  db:
+    image: postgres:${POSTGRES_IMAGE_TAG:-17}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # mount db creation script in place for bootstrap
+      - ./config/db:/docker-entrypoint-initdb.d
+    networks:
+      - internal
   redis:
     image: redis
     networks:
       - internal
-
-
-  summary:
-    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
-    env_file:
-      - summary.env
-    environment:
-      REACT_APP_CLIENT_ID: 'summary_openid_client'
-      REACT_APP_CONF_API_URL: 'https://confidentialbackend.${BASE_DOMAIN:-localtest.me}'
-      REACT_APP_PROJECT_ID: 'EmbeddedSummary'
-    labels:
-      - "traefik.enable=true"
-      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
-
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true"
-      - "traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
-    networks:
-      - ingress
-
 volumes:
   db-data: {}
   log-files: {}
-
-
 networks:
   # internal network for backing services
   internal:
