@@ -8,8 +8,3 @@ services:
     volumes:
     # set in .env
       - ${CONFIDENTIALBACKEND_CHECKOUT_DIR}/:/opt/app
-    labels:
-      # rewrite headers so flask debugger thinks it's running on localhost
-      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.middlewares=set-dev-host
-      - traefik.http.middlewares.set-dev-host.headers.customRequestHeaders.Host=localhost
-      - traefik.http.middlewares.set-dev-host.headers.customRequestHeaders.X-Forwarded-Host=localhost
