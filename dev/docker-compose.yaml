@@ -1,5 +1,21 @@
 ---
 services:
+  celery:
+    image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
+    command:
+      - celery 
+      - --app=confidential_backend.celery_factory.celery
+      - worker
+      - --loglevel=debug 
+    env_file:
+      confidentialbackend.env
+    environment:
+      LAUNCH_CACHE_URL: http://fhir-internal:8080/fhir
+    depends_on:
+      - redis
+    networks:
+      - internal
+
   confidentialbackend:
     image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
     env_file:
@@ -30,6 +46,7 @@ services:
       - ingress
       - internal
     depends_on:
+      - celery
       - redis
     volumes:
       - log-files:/var/log/confidentialbackend
@@ -64,6 +81,8 @@ services:
       hapi.fhir.bulk_import_enabled: "true"
       # allow direct assignment of resource IDs in any format
       hapi.fhir.client_id_strategy: ANY
+      # disable referential integrity checks, as LAUNCH FHIR doesn't always provide
+      hapi.fhir.enforce_referential_integrity_on_write: false
       # enable all endpoints for operational data
       management.endpoints.web.exposure.include: "*"
     volumes:
