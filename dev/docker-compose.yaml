@@ -2,11 +2,14 @@
 services:
   celery:
     image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
-    command: celery --app confidential_backend.celery_factory.celery worker --loglevel=debug 
+    command:
+      - celery 
+      - --app=confidential_backend.celery_factory.celery
+      - worker
+      - --loglevel=debug 
     env_file:
       confidentialbackend.env
     environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
       LAUNCH_CACHE_URL: http://fhir-internal:8080/fhir
     depends_on:
       - redis
@@ -18,7 +21,6 @@ services:
     env_file:
       confidentialbackend.env
     environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
       REQUEST_CACHE_URL: redis://redis:6379/1
       SESSION_REDIS: redis://redis:6379/0
 
