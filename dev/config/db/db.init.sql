@@ -1,3 +1,6 @@
+---- HAPI ----
+create database hapifhir;
+
 ---- logserver ----
 create database app_db;
 \connect app_db;
