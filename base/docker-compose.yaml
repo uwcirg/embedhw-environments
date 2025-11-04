@@ -46,6 +46,7 @@ services:
       - redis
     volumes:
       - log-files:/var/log/confidentialbackend
+
   summary:
     image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
     environment:
@@ -133,6 +134,7 @@ services:
     networks:
       - ingress
       - internal
+
   db:
     image: postgres:${POSTGRES_IMAGE_TAG:-17}
     environment:
