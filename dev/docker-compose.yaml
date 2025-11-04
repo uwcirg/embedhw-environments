@@ -59,3 +59,16 @@ services:
     extends:
       file: ../base/docker-compose.yaml
       service: redis
+
+volumes:
+  db-data: {}
+  log-files: {}
+
+networks:
+  # internal network for backing services
+  internal:
+
+  # ingress network
+  ingress:
+    external: true
+    name: external_web
