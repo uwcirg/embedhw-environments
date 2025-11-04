@@ -1,0 +1,169 @@
+---
+services:
+  celery:
+    image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
+    command:
+      - celery 
+      - --app=confidential_backend.celery_factory.celery
+      - worker
+      - --loglevel=debug 
+    env_file:
+      confidentialbackend.env
+    environment:
+      LAUNCH_CACHE_URL: http://fhir-internal:8080/fhir
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+  confidentialbackend:
+    image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
+    env_file:
+      confidentialbackend.env
+    environment:
+      REQUEST_CACHE_URL: redis://redis:6379/1
+      SESSION_REDIS: redis://redis:6379/0
+
+      PREFERRED_URL_SCHEME: https
+      SESSION_COOKIE_SECURE: "true"
+      # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
+      SESSION_COOKIE_SAMESITE: None
+      # ultimate destination after SoF launch and backend auth
+      LAUNCH_DEST: https://confidentialbackend.${BASE_DOMAIN}/launch.html
+
+      # do not pass launch/patient as Epic will infer standalone launch
+      SOF_CLIENT_SCOPES: user/*.read launch openid fhirUser
+
+      LOGSERVER_URL: https://logs.${BASE_DOMAIN}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
+
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+    networks:
+      - ingress
+      - internal
+    depends_on:
+      - celery
+      - redis
+    volumes:
+      - log-files:/var/log/confidentialbackend
+  summary:
+    image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
+    env_file:
+      - summary.env
+    environment:
+      REACT_APP_CLIENT_ID: summary_openid_client
+      REACT_APP_CONF_API_URL: https://confidentialbackend.${BASE_DOMAIN}
+      REACT_APP_PROJECT_ID: EmbeddedSummary
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
+
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+    networks:
+      - ingress
+
+  fhir:
+    image: hapiproject/hapi:${FHIR_IMAGE_TAG:-v7.6.0}
+    environment:
+      spring.datasource.url: jdbc:postgresql://db:5432/hapifhir
+      spring.datasource.username: postgres
+      spring.datasource.password: postgres
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+
+      hapi.fhir.bulk_export_enabled: "true"
+      hapi.fhir.bulk_import_enabled: "true"
+      # allow direct assignment of resource IDs in any format
+      hapi.fhir.client_id_strategy: ANY
+      # disable referential integrity checks, as LAUNCH FHIR doesn't always provide
+      hapi.fhir.enforce_referential_integrity_on_write: false
+      # enable all endpoints for operational data
+      management.endpoints.web.exposure.include: "*"
+    volumes:
+      # docker image does not contain any appropriate HTTP client
+      # use busybox from host as `wget`
+      - /usr/bin/busybox:/usr/bin/wget:ro
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - --quiet
+        - http://localhost:8080/actuator/health
+      start_period: 2m
+    expose:
+      - 8080
+    depends_on:
+      - db
+    networks:
+      internal:
+        aliases:
+          - fhir-internal
+      # expose HAPI to internet
+      ingress:
+    labels:
+      # unauthenticated route
+      - traefik.enable=true
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
+      # authenticated route
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir-auth.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.middlewares=fhir-auth-${COMPOSE_PROJECT_NAME}
+      # require password; see .env
+      - traefik.http.middlewares.fhir-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FHIR_AUTH_PASSWORD_HASH}
+
+  logs:
+    image: postgrest/postgrest
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/app_db
+      PGRST_DB_SCHEMA: api
+      PGRST_DB_ANON_ROLE: web_anon
+    env_file:
+      - logs.env
+    depends_on:
+      - db
+    networks:
+      - ingress
+      - internal
+  db:
+    image: postgres:${POSTGRES_IMAGE_TAG:-17}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # mount db creation script in place for bootstrap
+      - ./config/db:/docker-entrypoint-initdb.d
+    networks:
+      - internal
+  redis:
+    image: redis
+    networks:
+      - internal
+volumes:
+  db-data: {}
+  log-files: {}
+networks:
+  # internal network for backing services
+  internal:
+
+  # ingress network
+  ingress:
+    external: true
+    name: external_web
