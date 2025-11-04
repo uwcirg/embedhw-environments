@@ -1,4 +1,4 @@
-# Development Configuration
+# Production Configuration
 Sets up a development deploy
 
 ## Setup
