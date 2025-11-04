@@ -1,0 +1,74 @@
+---
+services:
+  celery:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: celery
+    env_file:
+      confidentialbackend.env
+
+  confidentialbackend:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: confidentialbackend
+    env_file:
+      confidentialbackend.env
+
+  summary:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: summary
+    env_file:
+      - summary.env
+
+  fhir:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: fhir
+    networks:
+      # expose HAPI to internet
+      ingress:
+    labels:
+      # unauthenticated route
+      - traefik.enable=true
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
+      # authenticated route
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir-auth.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.middlewares=fhir-auth-${COMPOSE_PROJECT_NAME}
+      # require password; see .env
+      - traefik.http.middlewares.fhir-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FHIR_AUTH_PASSWORD_HASH}
+
+  logs:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: logs
+    env_file:
+      - logs.env
+
+  db:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: db
+
+  redis:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: redis
+
+volumes:
+  db-data: {}
+  log-files: {}
+
+networks:
+  # internal network for backing services
+  internal:
+
+  # ingress network
+  ingress:
+    external: true
+    name: external_web
