@@ -1,5 +1,5 @@
-# Development Configuration
-Sets up a development deploy
+# Production Configuration
+Sets up a production deploy
 
 ## Setup
 Copy the default env files:
