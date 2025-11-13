@@ -17,6 +17,7 @@ services:
   confidentialbackend:
     image: ghcr.io/uwcirg/helloworld-confidential-client-sof:${CONFIDENTIALBACKEND_IMAGE_TAG:-latest}
     environment:
+      APP_FHIR_URL: http://fhir-internal:8080/fhir
       REQUEST_CACHE_URL: redis://redis:6379/1
       SESSION_REDIS: redis://redis:6379/0
 
