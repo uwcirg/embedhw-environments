@@ -43,6 +43,20 @@ services:
       # require password; see .env
       - traefik.http.middlewares.fhir-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FHIR_AUTH_PASSWORD_HASH}
 
+  launchcache:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: launchcache
+    networks:
+      # expose LAUNCH CACHE HAPI to internet
+      ingress:
+    labels:
+      # unauthenticated route
+      - traefik.enable=true
+      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.rule=Host(`launchcache.${BASE_DOMAIN}`)
+      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
   logs:
     extends:
       file: ../base/docker-compose.yaml
