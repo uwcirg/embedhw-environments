@@ -137,15 +137,6 @@ services:
       internal:
         aliases:
           - launchcache-internal
-      # expose HAPI to internet
-      ingress:
-    labels:
-      # unauthenticated route
-      - traefik.enable=true
-      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.rule=Host(`launchcache.${BASE_DOMAIN}`)
-      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      - traefik.http.routers.launchcache-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
-
   logs:
     image: postgrest/postgrest
     labels:
