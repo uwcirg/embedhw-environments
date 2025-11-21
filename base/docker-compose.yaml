@@ -111,6 +111,8 @@ services:
       service: fhir-base
     environment:
       spring.datasource.url: jdbc:postgresql://db:5432/launchcachehapifhir
+      # disable referential integrity checks, as LAUNCH FHIR doesn't always provide
+      hapi.fhir.enforce_referential_integrity_on_write: false
     networks:
       internal:
         aliases:
