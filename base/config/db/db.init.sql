@@ -1,6 +1,9 @@
 ---- HAPI ----
 create database hapifhir;
 
+---- LAUNCH CACHE HAPI ----
+create database launchcachehapifhir;
+
 ---- logserver ----
 create database app_db;
 \connect app_db;
