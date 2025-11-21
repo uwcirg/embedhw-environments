@@ -8,7 +8,7 @@ services:
       - worker
       - --loglevel=debug 
     environment:
-      LAUNCH_CACHE_URL: http://launchcache-internal:8081/fhir
+      LAUNCH_CACHE_URL: http://launchcache-internal:8080/fhir
     depends_on:
       - redis
     networks:
@@ -143,10 +143,10 @@ services:
         - wget
         - --spider
         - --quiet
-        - http://localhost:8081/actuator/health
+        - http://localhost:8080/actuator/health
       start_period: 2m
     expose:
-      - 8081
+      - 8080
     depends_on:
       db:
         condition: service_healthy
