@@ -8,7 +8,7 @@ services:
       - worker
       - --loglevel=debug 
     environment:
-      LAUNCH_CACHE_URL: http://fhir-internal:8080/fhir
+      LAUNCH_CACHE_URL: http://launchcache-internal:8080/fhir
     depends_on:
       - redis
     networks:
@@ -64,10 +64,9 @@ services:
     networks:
       - ingress
 
-  fhir:
+  fhir-base:
     image: hapiproject/hapi:${FHIR_IMAGE_TAG:-v7.6.0}
     environment:
-      spring.datasource.url: jdbc:postgresql://db:5432/hapifhir
       spring.datasource.username: postgres
       spring.datasource.password: postgres
       spring.datasource.driverClassName: org.postgresql.Driver
@@ -77,8 +76,6 @@ services:
       hapi.fhir.bulk_import_enabled: "true"
       # allow direct assignment of resource IDs in any format
       hapi.fhir.client_id_strategy: ANY
-      # disable referential integrity checks, as LAUNCH FHIR doesn't always provide
-      hapi.fhir.enforce_referential_integrity_on_write: false
       # enable all endpoints for operational data
       management.endpoints.web.exposure.include: "*"
     volumes:
@@ -96,27 +93,30 @@ services:
     expose:
       - 8080
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  fhir:
+    extends:
+      service: fhir-base
+    environment:
+      spring.datasource.url: jdbc:postgresql://db:5432/hapifhir
     networks:
       internal:
         aliases:
           - fhir-internal
-      # expose HAPI to internet
-      ingress:
-    labels:
-      # unauthenticated route
-      - traefik.enable=true
-      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir.${BASE_DOMAIN}`)
-      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      - traefik.http.routers.fhir-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
 
-      # authenticated route
-      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir-auth.${BASE_DOMAIN}`)
-      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
-      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.middlewares=fhir-auth-${COMPOSE_PROJECT_NAME}
-      # require password; see .env
-      - traefik.http.middlewares.fhir-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FHIR_AUTH_PASSWORD_HASH}
+  launchcache:
+    extends:
+      service: fhir-base
+    environment:
+      spring.datasource.url: jdbc:postgresql://db:5432/launchcachehapifhir
+      # disable referential integrity checks, as LAUNCH FHIR doesn't always provide
+      hapi.fhir.enforce_referential_integrity_on_write: false
+    networks:
+      internal:
+        aliases:
+          - launchcache-internal
 
   logs:
     image: postgrest/postgrest
@@ -131,7 +131,8 @@ services:
       PGRST_DB_SCHEMA: api
       PGRST_DB_ANON_ROLE: web_anon
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - ingress
       - internal
@@ -145,12 +146,24 @@ services:
       - db-data:/var/lib/postgresql/data
       # mount db creation script in place for bootstrap
       - ./config/db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - --user=postgres
+        - --dbname=hapifhir
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     networks:
       - internal
+
   redis:
     image: redis
     networks:
       - internal
+
 volumes:
   db-data: {}
   log-files: {}
