@@ -26,7 +26,7 @@ services:
       # required for setting cookies in cross-site iframes (eg Epic Hyperdrive)
       SESSION_COOKIE_SAMESITE: None
       # ultimate destination after SoF launch and backend auth
-      LAUNCH_DEST: https://confidentialbackend.${BASE_DOMAIN}/launch.html
+      LAUNCH_DEST: https://${BASE_DOMAIN}/launch.html
 
       # do not pass launch/patient as Epic will infer standalone launch
       SOF_CLIENT_SCOPES: user/*.read launch openid fhirUser
@@ -34,7 +34,7 @@ services:
       LOGSERVER_URL: https://logs.${BASE_DOMAIN}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
+      - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.rule=Host(`${BASE_DOMAIN}`) && !Host(`logs.${BASE_DOMAIN}`) && (PathPrefix(`/auth`) || PathPrefix(`/fhir-router`) || PathPrefix(`/auditlog`))
 
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
       - traefik.http.routers.confidentialbackend-${COMPOSE_PROJECT_NAME}.tls=true
@@ -52,11 +52,11 @@ services:
     image: ghcr.io/uwcirg/patient-summary:${SUMMARY_IMAGE_TAG:-latest}
     environment:
       REACT_APP_CLIENT_ID: summary_openid_client
-      REACT_APP_CONF_API_URL: https://confidentialbackend.${BASE_DOMAIN}
+      REACT_APP_CONF_API_URL: https://${BASE_DOMAIN}
       REACT_APP_PROJECT_ID: EmbeddedSummary
     labels:
       - traefik.enable=true
-      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`confidentialbackend.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
+      - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.rule=Host(`${BASE_DOMAIN}`) && !Host(`logs.${BASE_DOMAIN}`) && !PathPrefix(`/auth`) && !PathPrefix(`/fhir-router`) && !PathPrefix(`/auditlog`)
 
       - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
       - traefik.http.routers.summary-${COMPOSE_PROJECT_NAME}.tls=true
