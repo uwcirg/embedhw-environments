@@ -11,4 +11,4 @@ an embedded environment such as a vendor EMR.
 ## Setup
 Clone this repo to your desired location and follow Setup steps in [`dev`](./dev/README.md), to setup a development deploy, or [`prod`](./prod/README.md) for a production deploy.
 
-The launch URL:  https://confidentialbackend.<server_name>/auth/launch 
+The launch URL:  https://<server_name>/auth/launch
