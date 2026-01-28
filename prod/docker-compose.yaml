@@ -26,13 +26,35 @@ services:
       file: ../base/docker-compose.yaml
       service: fhir
 
+  launchcache:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: launchcache
+
   logs:
     extends:
       file: ../base/docker-compose.yaml
       service: logs
     env_file:
       - logs.env
+    labels:
+      # Allow POST /events WITHOUT auth: PostgREST manages auth
+      - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`) && Path(`/events`) && Method(`POST`)
+      - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.priority=100
 
+      # Require auth for all other requests
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.middlewares=logs-auth-${COMPOSE_PROJECT_NAME}
+
+      # Basic auth middleware
+      # requires password; see .env
+      - traefik.http.middlewares.logs-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${LOGS_PASSWORD_HASH}
   db:
     extends:
       file: ../base/docker-compose.yaml
