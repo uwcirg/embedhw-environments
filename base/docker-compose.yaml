@@ -105,6 +105,15 @@ services:
       internal:
         aliases:
           - fhir-internal
+    labels:
+      - traefik.enable=true
+      # authenticated route
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.rule=Host(`fhir-auth.${BASE_DOMAIN}`)
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.routers.fhir-auth-${COMPOSE_PROJECT_NAME}.middlewares=fhir-auth-${COMPOSE_PROJECT_NAME}
+      # require password; see .env
+      - traefik.http.middlewares.fhir-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FHIR_AUTH_PASSWORD_HASH}
 
   launchcache:
     extends:
