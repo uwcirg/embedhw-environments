@@ -26,6 +26,11 @@ services:
       file: ../base/docker-compose.yaml
       service: fhir
 
+  launchcache:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: launchcache
+
   logs:
     extends:
       file: ../base/docker-compose.yaml
