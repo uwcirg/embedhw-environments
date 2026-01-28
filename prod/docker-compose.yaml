@@ -33,7 +33,7 @@ services:
     env_file:
       - logs.env
     labels:
-      # Allow POST /events WITHOUT auth
+      # Allow POST /events WITHOUT auth: PostgREST manages auth
       - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`) && Path(`/events`) && Method(`POST`)
       - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
       - traefik.http.routers.logs-events-${COMPOSE_PROJECT_NAME}.tls=true
