@@ -63,6 +63,11 @@ services:
       service: logs
     env_file:
       - logs.env
+    labels:
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
 
   db:
     extends:

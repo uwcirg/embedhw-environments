@@ -120,12 +120,6 @@ services:
 
   logs:
     image: postgrest/postgrest
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.rule=Host(`logs.${BASE_DOMAIN}`)
-      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
-      - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
     environment:
       PGRST_DB_URI: postgres://postgres:postgres@db:5432/app_db
       PGRST_DB_SCHEMA: api
@@ -136,6 +130,8 @@ services:
     networks:
       - ingress
       - internal
+    labels:
+      - traefik.enable=true
 
   db:
     image: postgres:${POSTGRES_IMAGE_TAG:-17}
