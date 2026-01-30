@@ -105,6 +105,7 @@ services:
       internal:
         aliases:
           - fhir-internal
+      ingress:
     labels:
       - traefik.enable=true
       # authenticated route
