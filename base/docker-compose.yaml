@@ -30,6 +30,7 @@ services:
 
       # do not pass launch/patient as Epic will infer standalone launch
       SOF_CLIENT_SCOPES: user/*.read launch openid fhirUser
+      LAUNCH_FHIR_SCOPES: launch/patient patient/*.rs system/*.rs user/*.rs
 
       LOGSERVER_URL: https://logs.${BASE_DOMAIN}
     labels:
