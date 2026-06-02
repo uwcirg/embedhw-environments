@@ -55,6 +55,12 @@ services:
       # Basic auth middleware
       # requires password; see .env
       - traefik.http.middlewares.logs-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${LOGS_PASSWORD_HASH}
+
+  fishmouth:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: fishmouth
+
   db:
     extends:
       file: ../base/docker-compose.yaml
