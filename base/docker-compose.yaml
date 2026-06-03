@@ -147,7 +147,7 @@ services:
       - traefik.enable=true
 
   fishmouth:
-    image: ghcr.io/uwcirg/fishmouth:${FISHMOUTH_IMAGE_TAG:-latest}
+    image: ghcr.io/uwcirg/fishmouth:${FISHMOUTH_IMAGE_TAG:-main}
     environment:
       APP_FHIR_URL: http://fhir-internal:8080/fhir
       PREFERRED_URL_SCHEME: https
