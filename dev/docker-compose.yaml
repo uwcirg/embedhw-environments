@@ -65,6 +65,8 @@ services:
     extends:
       file: ../base/docker-compose.yaml
       service: fishmouth
+    env_file:
+      - fishmouth.env
     labels:
       # unauthenticated route
       - traefik.enable=true
