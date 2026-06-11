@@ -1,7 +1,7 @@
 # docker-compose development override for fishmouth
 services:
   fishmouth:
-    command: sh -c "flask --debug run --host 0.0.0.0 --port ${PORT:-8000}"
+    command: sh -c "flask --debug run --host 0.0.0.0 --port ${PORT:-5000}"
     environment:
       # sets app.config.debug
       FLASK_DEBUG: "true"
