@@ -61,6 +61,19 @@ services:
       - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls=true
       - traefik.http.routers.logs-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
 
+  fishmouth:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: fishmouth
+    env_file:
+      - fishmouth.env
+    labels:
+      # unauthenticated route
+      - traefik.enable=true
+      - traefik.http.routers.fishmouth-${COMPOSE_PROJECT_NAME}.rule=Host(`fishmouth.${BASE_DOMAIN}`)
+      - traefik.http.routers.fishmouth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fishmouth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
   db:
     extends:
       file: ../base/docker-compose.yaml
