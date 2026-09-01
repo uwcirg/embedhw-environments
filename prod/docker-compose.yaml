@@ -61,6 +61,13 @@ services:
       file: ../base/docker-compose.yaml
       service: fishmouth
 
+  fhirbackendauth:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: fhirbackendauth
+    env_file:
+      - fhirbackendauth.env
+
   db:
     extends:
       file: ../base/docker-compose.yaml
@@ -74,6 +81,7 @@ services:
 volumes:
   db-data: {}
   log-files: {}
+  jwk-keys: {}
 
 networks:
   # internal network for backing services
