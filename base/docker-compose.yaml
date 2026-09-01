@@ -167,7 +167,7 @@ services:
       - internal
 
   fhirbackendauth:
-    image: ghcr.io/uwcirg/fhir-backend-auth:${FHIRBACKENDAUTH_IMAGE_TAG:-latest}
+    image: ghcr.io/uwcirg/backend-auth-proxy:${FHIRBACKENDAUTH_IMAGE_TAG:-main}
     environment:
       SERVER_NAME: fhirbackendauth.${BASE_DOMAIN}
       PREFERRED_URL_SCHEME: https
