@@ -166,6 +166,28 @@ services:
       - ingress
       - internal
 
+  fhirbackendauth:
+    image: ghcr.io/uwcirg/backend-auth-proxy:${FHIRBACKENDAUTH_IMAGE_TAG:-main}
+    environment:
+      SERVER_NAME: fhirbackendauth.${BASE_DOMAIN}
+      PREFERRED_URL_SCHEME: https
+      REDIS_URL: redis://redis:6379/2
+      JWK_KEY_DIR: /data/jwks
+      PYTHONUNBUFFERED: "1"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.fhirbackendauth-${COMPOSE_PROJECT_NAME}.rule=Host(`fhirbackendauth.${BASE_DOMAIN}`) && PathPrefix(`/.well-known`)
+      - traefik.http.routers.fhirbackendauth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.fhirbackendauth-${COMPOSE_PROJECT_NAME}.tls=true
+      - traefik.http.routers.fhirbackendauth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+    networks:
+      - ingress
+      - internal
+    depends_on:
+      - redis
+    volumes:
+      - jwk-keys:/data/jwks
+
   db:
     image: postgres:${POSTGRES_IMAGE_TAG:-17}
     environment:
@@ -195,6 +217,7 @@ services:
 
 volumes:
   db-data: {}
+  jwk-keys: {}
   log-files: {}
 networks:
   # internal network for backing services
