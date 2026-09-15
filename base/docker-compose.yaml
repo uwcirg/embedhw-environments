@@ -152,6 +152,7 @@ services:
       APP_FHIR_URL: http://fhir-internal:8080/fhir
       PREFERRED_URL_SCHEME: https
       PYTHONUNBUFFERED: 1
+      UPSTREAM_SEARCH_URL: http://fhirbackendauth:8000/fhir
 
     labels:
       - traefik.enable=true
