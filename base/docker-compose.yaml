@@ -159,7 +159,7 @@ services:
       - traefik.http.routers.fishmouth-auth-${COMPOSE_PROJECT_NAME}.rule=Host(`fishmouth.${BASE_DOMAIN}`)
       - traefik.http.routers.fishmouth-auth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
       - traefik.http.routers.fishmouth-auth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
-      - traefik.http.routers.fishmouth-auth-${COMPOSE_PROJECT_NAME}.middlewares=fishmouth-${COMPOSE_PROJECT_NAME}
+      - traefik.http.routers.fishmouth-auth-${COMPOSE_PROJECT_NAME}.middlewares=fishmouth-auth-${COMPOSE_PROJECT_NAME}
       # require password; see .env
       - traefik.http.middlewares.fishmouth-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${FISHMOUTH_PASSWORD_HASH}
     networks:
