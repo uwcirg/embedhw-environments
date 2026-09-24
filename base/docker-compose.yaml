@@ -150,6 +150,7 @@ services:
     image: ghcr.io/uwcirg/fishmouth:${FISHMOUTH_IMAGE_TAG:-main}
     environment:
       APP_FHIR_URL: http://fhir-internal:8080/fhir
+      EXTRACTED_RESOURCES_PERSISTED_IN_APP_FHIR: '["Observation"]'
       PREFERRED_URL_SCHEME: https
       PYTHONUNBUFFERED: 1
 
