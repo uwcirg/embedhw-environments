@@ -60,6 +60,8 @@ services:
     extends:
       file: ../base/docker-compose.yaml
       service: fishmouth
+    environment:
+      UPSTREAM_SEARCH_URL: http://fhirbackendauth:8000/fhir
 
   fhirbackendauth:
     extends:
