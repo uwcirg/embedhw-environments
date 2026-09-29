@@ -25,6 +25,9 @@ services:
     extends:
       file: ../base/docker-compose.yaml
       service: fhir
+    environment:
+      # disable MCP server until reviewed
+      spring.ai.mcp.server.enabled: "false"
 
   launchcache:
     extends:
