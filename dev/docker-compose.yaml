@@ -74,6 +74,13 @@ services:
       - traefik.http.routers.fishmouth-${COMPOSE_PROJECT_NAME}.entrypoints=websecure
       - traefik.http.routers.fishmouth-${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
 
+  fhirbackendauth:
+    extends:
+      file: ../base/docker-compose.yaml
+      service: fhirbackendauth
+    env_file:
+      - fhirbackendauth.env
+
   db:
     extends:
       file: ../base/docker-compose.yaml
@@ -87,6 +94,7 @@ services:
 volumes:
   db-data: {}
   log-files: {}
+  jwk-keys: {}
 
 networks:
   # internal network for backing services
