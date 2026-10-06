@@ -154,10 +154,6 @@ services:
       PYTHONUNBUFFERED: 1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
     labels:
       - traefik.enable=true
       # authenticated route
