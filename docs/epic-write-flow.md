@@ -1,4 +1,4 @@
-# Writing PRO results to Epic flowsheets
+# Writing CNICS PRO QuestionnaireResponses to Epic flowsheets as Observations
 
 How a questionnaire a patient completes in DHAIR ends up as flowsheet rows in
 UCSD Epic. Diagrams are [Mermaid](https://mermaid.js.org/) and render on GitHub;
