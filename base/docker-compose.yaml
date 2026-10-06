@@ -153,7 +153,8 @@ services:
       EXTRACTED_RESOURCES_PERSISTED_IN_APP_FHIR: '["Observation"]'
       PREFERRED_URL_SCHEME: https
       PYTHONUNBUFFERED: 1
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health/live"]
     labels:
       - traefik.enable=true
       # authenticated route
