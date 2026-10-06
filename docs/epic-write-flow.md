@@ -37,15 +37,16 @@ flowchart LR
     end
 
     DHAIR -->|"1. Patient + QuestionnaireResponse<br/>basic auth"| HAPI
-    DHAIR -->|"2. notify with QuestionnaireResponse ID<br/>basic auth"| FM
+    DHAIR <-->|"2. notify with QuestionnaireResponse ID, basic auth<br/>7. 2xx or error"| FM
     FM -->|"3. $extract"| HAPI
     FM -->|"4. find Patient by MRN"| FBA
     FBA -->|"OAuth2 backend token"| BAPP
     FM -->|"5. create Observations<br/>as the patient"| WAPP
     WAPP --> FS
     FM -->|"6. copy of Observations<br/>with Epic ID"| HAPI
-    FM -.->|"7. 2xx or error"| DHAIR
 
+    %% invisible link: keeps DHAIR just right of the setup block
+    FQ ~~~ DHAIR
     FQ -.->|"Questionnaires with<br/>extraction metadata"| HAPI
     REG -.-> EPIC
     RAPP -.->|"reads QuestionnaireResponses<br/>not covered here"| HAPI
