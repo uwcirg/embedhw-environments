@@ -17,7 +17,6 @@ flowchart LR
         direction TB
         FQ["fhir-questionnaires pipeline<br/>one Questionnaire set per Epic environment,<br/>each item mapped to a flowsheet FHIR ID"]
         REG["Epic app registration<br/>fhir.epic.com"]
-        ORD["UCSD flowsheet orders<br/>patient must have one before<br/>Epic accepts a write"]
     end
 
     DHAIR["DHAIR<br/>PRO website, cron every minute"]
@@ -49,7 +48,6 @@ flowchart LR
 
     FQ -.->|"Questionnaires with<br/>extraction metadata"| HAPI
     REG -.-> EPIC
-    ORD -.-> FS
     RAPP -.->|"reads QuestionnaireResponses<br/>not covered here"| HAPI
 ```
 
@@ -61,11 +59,11 @@ and the write to Epic succeeded.
 
 ```mermaid
 sequenceDiagram
-    participant D as DHAIR
+    participant D as DHAIR (CNICS PRO)
     participant H as App FHIR store (HAPI)
     participant F as fishmouth
-    participant B as Epic backend app
-    participant W as Epic writer app
+    participant B as "CNICS Backend Reader" Epic app
+    participant W as "CNICS PRO Writer 2026" Epic app
 
     Note over D: Patient finishes a questionnaire.<br/>Cron picks it up within a minute.
 
