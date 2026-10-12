@@ -12,3 +12,7 @@ an embedded environment such as a vendor EMR.
 Clone this repo to your desired location and follow Setup steps in [`dev`](./dev/README.md), to setup a development deploy, or [`prod`](./prod/README.md) for a production deploy.
 
 The launch URL:  https://<server_name>/auth/launch
+
+## "Write to Epic" Flow Diagram
+
+See https://github.com/uwcirg/embedhw-environments/blob/add-write-diagram/docs/epic-write-flow.md
