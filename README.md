@@ -15,4 +15,4 @@ The launch URL:  https://<server_name>/auth/launch
 
 ## "Write to Epic" Flow Diagram
 
-See https://github.com/uwcirg/embedhw-environments/blob/add-write-diagram/docs/epic-write-flow.md
+See https://github.com/uwcirg/embedhw-environments/blob/main/docs/epic-write-flow.md
