@@ -1,6 +1,6 @@
 # Writing CNICS PRO QuestionnaireResponses to Epic flowsheets as Observations
 
-How a questionnaire a patient completes in DHAIR ends up as flowsheet rows in
+How a patient-completed questionnaire from DHAIR ends up as flowsheet rows in
 UCSD Epic. Diagrams are [Mermaid](https://mermaid.js.org/) and render on GitHub;
 edit them in place or paste into <https://mermaid.live> to preview.
 
@@ -39,11 +39,12 @@ flowchart LR
     DHAIR -->|"1. Patient + QuestionnaireResponse<br/>basic auth"| HAPI
     DHAIR <-->|"2. notify with QuestionnaireResponse ID, basic auth<br/>7. 2xx or error"| FM
     FM -->|"3. $extract"| HAPI
-    FM -->|"4. find Patient by MRN"| FBA
+    FM -->|"4. find Patient by MRN<br/>only if Epic IDs not cached"| FBA
     FBA -->|"OAuth2 backend token"| BAPP
     FM -->|"5. create Observations<br/>as the patient"| WAPP
     WAPP --> FS
-    FM -->|"6. copy of Observations<br/>with Epic ID"| HAPI
+    FM -->|"6. copy of each Observation<br/>with Epic ID"| HAPI
+    FM <-->|"Epic Patient ID + MyChart user ID<br/>cached on Patient"| HAPI
 
     %% invisible link: keeps DHAIR just right of the setup block
     FQ ~~~ DHAIR
@@ -56,7 +57,7 @@ flowchart LR
 
 Happy path for one completed questionnaire. fishmouth handles the whole thing
 inside the one request from DHAIR, so a 2xx in step 7 means both the extract
-and the write to Epic succeeded.
+and the multiple writes to Epic (one per extracted Observation) all succeeded.
 
 ```mermaid
 sequenceDiagram
@@ -77,20 +78,24 @@ sequenceDiagram
     H-->>F: Bundle of Observations, one per flowsheet row
     Note over F,H: HAPI does not save these.<br/>effectiveDateTime comes from authored.
 
-    F->>H: 4. Read Patient to get MRN
-    F->>B: 4. Search Patient by MRN (OAuth2 backend token)
-    B-->>F: Epic Patient FHIR ID and MyChart user ID
+    F->>H: Read Patient
+    H-->>F: MRN, plus Epic Patient FHIR ID and MyChart user ID if cached
+
+    opt Epic IDs not cached on the Patient yet
+        F->>B: 4. Search Patient by MRN (OAuth2 backend token)
+        B-->>F: Epic Patient FHIR ID and MyChart user ID
+        F->>H: Cache both IDs on the Patient for next time
+    end
 
     Note over F: Point each Observation at the Epic Patient
 
     loop each Observation
         F->>W: 5. Create Observation (EMP basic auth, MyChart user ID header)
         W-->>F: Created, Epic Observation ID
+        F->>H: 6. Save Observation with Epic Observation ID as identifier
     end
     Note over W: Rows appear in the patient's flowsheet.<br/>No Encounter or Episode reference needed.
-
-    F->>H: 6. Save Observations with Epic Observation ID as identifier
-    Note over F,H: For playback and forensics. Can be switched off.
+    Note over F,H: Step 6 is for playback and forensics. Can be switched off.
 
     F-->>D: 7. 2xx
 ```
@@ -113,7 +118,7 @@ flowchart TD
     TRY -->|yes| SEND
     TRY -->|no| FAIL(["Gives up. Error is in fishmouth logs."]):::bad
 
-    subgraph WHY["Why fishmouth returns an error"]
+    subgraph WHY["Common errors bubbled up by fishmouth"]
         direction TB
         E1["$extract failed"]
         E2["No Epic Patient found for the MRN"]
@@ -136,8 +141,6 @@ Points the diagrams assume or leave open:
 - **fhirbackendauth in step 4.** Drawn as the hop between fishmouth and Epic for
   the Patient search, inferred from `UPSTREAM_SEARCH_URL` in `fishmouth.env` and
   the JWK Set route in `base/docker-compose.yaml`.
-- **Source of the MyChart user ID (WPR).** Drawn as coming back from the Patient
-  search in step 4.
 - **After the third failed attempt.** Drawn as a dead end; whether DHAIR picks
   the response up again on a later cron run is not shown.
 - **Retry after a slow success.** If fishmouth takes longer than 5 s but the
