@@ -15,7 +15,8 @@ flows outside this document.
 flowchart LR
     subgraph PREP["One-time setup"]
         direction TB
-        FQ["[fhir-questionnaires](https://github.com/uwcirg/fhir-questionnaires) pipeline<br/>one Questionnaire set per Epic environment,<br/>each item mapped to a flowsheet record ID"]
+        FQ["fhir-questionnaires pipeline<br/>one Questionnaire set per Epic environment,<br/>each item mapped to a flowsheet record ID"]
+        click FQ "https://github.com/uwcirg/fhir-questionnaires"
         REG["Epic app registration<br/>fhir.epic.com"]
     end
 
