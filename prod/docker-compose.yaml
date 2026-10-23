@@ -6,6 +6,7 @@ services:
       service: celery
     env_file:
       confidentialbackend.env
+    restart: unless-stopped
 
   confidentialbackend:
     extends:
@@ -13,6 +14,7 @@ services:
       service: confidentialbackend
     env_file:
       confidentialbackend.env
+    restart: unless-stopped
 
   summary:
     extends:
@@ -20,6 +22,7 @@ services:
       service: summary
     env_file:
       - summary.env
+    restart: unless-stopped
 
   fhir:
     extends:
@@ -28,11 +31,13 @@ services:
     environment:
       # disable MCP server (/mcp/messages) until reviewed
       spring.ai.mcp.server.enabled: "false"
+    restart: unless-stopped
 
   launchcache:
     extends:
       file: ../base/docker-compose.yaml
       service: launchcache
+    restart: unless-stopped
 
   logs:
     extends:
@@ -58,6 +63,7 @@ services:
       # Basic auth middleware
       # requires password; see .env
       - traefik.http.middlewares.logs-auth-${COMPOSE_PROJECT_NAME}.basicauth.users=admin:${LOGS_PASSWORD_HASH}
+    restart: unless-stopped
 
   fishmouth:
     extends:
@@ -65,6 +71,7 @@ services:
       service: fishmouth
     environment:
       UPSTREAM_SEARCH_URL: http://fhirbackendauth:8000/fhir
+    restart: unless-stopped
 
   fhirbackendauth:
     extends:
@@ -72,16 +79,19 @@ services:
       service: fhirbackendauth
     env_file:
       - fhirbackendauth.env
+    restart: unless-stopped
 
   db:
     extends:
       file: ../base/docker-compose.yaml
       service: db
+    restart: unless-stopped
 
   redis:
     extends:
       file: ../base/docker-compose.yaml
       service: redis
+    restart: unless-stopped
 
 volumes:
   db-data: {}
