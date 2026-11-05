@@ -65,6 +65,8 @@ services:
       service: fishmouth
     environment:
       UPSTREAM_SEARCH_URL: http://fhirbackendauth:8000/fhir
+    env_file:
+      - fishmouth.env
 
   fhirbackendauth:
     extends:
